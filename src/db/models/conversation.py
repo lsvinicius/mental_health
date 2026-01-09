@@ -11,5 +11,7 @@ from src.db.models.event import ConversationEvent
 class Conversation(Base):
     __tablename__ = "conversations"
     user_id: str = mapped_column(ForeignKey("users.id"))
-    events: List[ConversationEvent] = relationship("ConversationEvent", default=[])
+    events: List[ConversationEvent] = relationship(
+        "ConversationEvent", default_factory=list
+    )
     id: str = mapped_column(default=uuid4, primary_key=True, nullable=False)

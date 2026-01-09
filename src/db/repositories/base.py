@@ -18,8 +18,8 @@ class BaseRepository[T: ModelWithId]:
         return obj
 
     async def get(self, id_: Any) -> Optional[T]:
-        if getattr(self._model, "id") is None:
-            raise ValueError("Need id in model")
+        if not hasattr(self._model, "id"):
+            raise ValueError(f"Need id in model {self._model}")
         result = await self._session.execute(
             select(self._model).where(self._model.id == id_)
         )

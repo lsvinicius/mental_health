@@ -1,6 +1,9 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from src.api.dependencies import ConversationCommandHandlerDependency
+from src.api.dependencies import (
+    ConversationCommandHandlerDependency,
+    ConversationQueryHandlerDependency,
+)
 
 router = APIRouter()
 
@@ -25,7 +28,6 @@ async def start_conversation(
     conversation_id = await command_handler.start_conversation(request.user_id)
     return {
         "conversation_id": conversation_id,
-        "message": "Conversation started successfully",
     }
 
 
@@ -44,33 +46,17 @@ async def new_message(
         raise HTTPException(status_code=500, detail=str(e))
     return {
         "message_id": message_id,
-        "conversation_id": conversation_id,
     }
 
 
-# @router.get("/conversations/{conversation_id}")
-# async def get_conversation(conversation_id: UUID):
-#     """Busca informações da conversa"""
-#     summary = await conversation_queries.get_conversation_summary(conversation_id)
-#     if not summary:
-#         raise HTTPException(status_code=404, detail="Conversation not found")
-#
-#     timeline = await conversation_queries.get_risk_timeline(conversation_id)
-#
-#     return {
-#         "summary": summary,
-#         "risk_timeline": timeline
-#     }
-#
-#
-# @router.get("/alerts")
-# async def get_alerts(status: Optional[str] = None):
-#     """Lista alertas ativos (dashboard do profissional)"""
-#     alerts = await conversation_queries.get_active_alerts(status)
-#     return {
-#         "alerts": alerts,
-#         "count": len(alerts)
-#     }
+@router.get("/conversations/{conversation_id}")
+async def get_conversation(
+    conversation_id: str, command_handler: ConversationQueryHandlerDependency
+):
+    """Get conversation."""
+    # aggregate = await command_handler.get_conversation_aggregate(conversation_id)
+
+    return {}
 
 
 @router.get("/health")

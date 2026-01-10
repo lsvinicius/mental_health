@@ -5,7 +5,6 @@ from starlette.responses import RedirectResponse
 from src.api.conversation import router
 
 
-# Cria aplicação FastAPI
 app = FastAPI(
     title="Mental Health Crisis Detection System",
     description="Event Sourcing + CQRS system for detecting mental health crises in conversations",
@@ -13,7 +12,6 @@ app = FastAPI(
 )
 
 
-# Inclui rotas
 app.include_router(router, prefix="/api/v1", tags=["conversations"])
 
 

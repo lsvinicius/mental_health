@@ -34,11 +34,11 @@ class ConversationAggregate:
         """Conversation version."""
         return self._version
 
-    def apply_events(self, events: List[ConversationEvent]):
+    def apply_events(self, events: List[ConversationEvent]) -> None:
         for event in events:
-            self._apply(event)
+            self.apply(event)
 
-    def _apply(self, event: ConversationEvent):
+    def apply(self, event: ConversationEvent) -> None:
         if event.type == EventType.CONVERSATION_STARTED:
             self._handle_conversation_started()
         elif event.type == EventType.CONVERSATION_DELETED:
@@ -47,21 +47,21 @@ class ConversationAggregate:
             self._handle_new_message(event)
         else:
             raise ValueError(f"Unknown event type: {event.type}")
-        self._version += 1
+        self._version = event.version
 
-    def _handle_conversation_started(self):
+    def _handle_conversation_started(self) -> None:
         if self._status is not None:
             raise ValueError(f"Cannot start conversation with status '{self._status}'")
         self._status = ConversationStatus.ACTIVE
 
-    def _handle_new_message(self, event: ConversationEvent):
+    def _handle_new_message(self, event: ConversationEvent) -> None:
         if self._status != ConversationStatus.ACTIVE:
             raise ValueError(
                 f"Cannot add message to conversation with status '{self._status}'"
             )
-        self._messages.append((event.payload, event.timestamp))
+        self._messages.append((event.payload, event.created_at))
 
-    def _handle_conversation_deleted(self):
+    def _handle_conversation_deleted(self) -> None:
         if self._status != ConversationStatus.ACTIVE:
             raise ValueError(f"Cannot delete conversation with status '{self._status}'")
         self._status = ConversationStatus.INACTIVE

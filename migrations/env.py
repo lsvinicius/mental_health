@@ -11,7 +11,7 @@ from src.db.models.base import Base
 from src.db.models.conversation import Conversation
 from src.db.models.user import User
 from src.db.models.event import ConversationEvent
-from src.db.models.conversationoutbox import ConversationOutbox
+from src.db.models.conversation_outbox import ConversationOutbox
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

@@ -5,6 +5,8 @@ from src.api.dependencies import (
     ConversationQueryHandlerDependency,
 )
 
+# from src.db.models.conversation import Conversation
+
 router = APIRouter()
 
 
@@ -18,6 +20,10 @@ class SendMessageRequest(BaseModel):
     sender: str
 
 
+class DeleteConversationRequest(BaseModel):
+    user_id: str
+
+
 # Routes
 @router.post("/conversations", status_code=201)
 async def start_conversation(
@@ -26,6 +32,22 @@ async def start_conversation(
 ):
     """Start a new conversation."""
     conversation_id = await command_handler.start_conversation(request.user_id)
+    return {
+        "conversation_id": conversation_id,
+    }
+
+
+@router.delete("/conversations/{conversation_id}", status_code=201)
+async def delete_conversation(
+    conversation_id: str,
+    request: DeleteConversationRequest,
+    command_handler: ConversationCommandHandlerDependency,
+):
+    """Send messages to a conversation."""
+    try:
+        await command_handler.delete_conversation(request.user_id, conversation_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
     return {
         "conversation_id": conversation_id,
     }

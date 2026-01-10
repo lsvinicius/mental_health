@@ -1,9 +1,11 @@
+from typing import List
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.db.models.event import ConversationEvent
-from src.db.models.conversationoutbox import ConversationOutbox
-from src.db.repositories.event import ConversationEventRepository
-from src.db.repositories.outbox import ConversationOutboxRepository
+from src.db.models.conversation_outbox import ConversationOutbox
+from src.db.repositories.conversation_event import ConversationEventRepository
+from src.db.repositories.conversation_outbox import ConversationOutboxRepository
 
 
 class EventStore:
@@ -12,10 +14,18 @@ class EventStore:
         self._conversation_event_repository = ConversationEventRepository(session)
         self._outbox_repository = ConversationOutboxRepository(session)
 
-    async def append_conversation_event(self, event: ConversationEvent) -> None:
-        await self._conversation_event_repository.save(event)
-        await self._outbox_repository.save(
-            ConversationOutbox(
-                payload=event.payload, conversation_id=event.conversation_id
+    async def append_event(self, event: ConversationEvent) -> None:
+        async with self._session:
+            await self._conversation_event_repository.save(event)
+            await self._session.flush()
+            await self._outbox_repository.save(
+                ConversationOutbox(
+                    payload=event.payload, conversation_id=event.conversation_id
+                )
             )
+            await self._session.commit()
+
+    async def retrieve_events(self, conversation_id: str) -> List[ConversationEvent]:
+        return await self._conversation_event_repository.get_all_conversation_events(
+            conversation_id
         )

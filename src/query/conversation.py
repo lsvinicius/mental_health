@@ -1,7 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.aggregates.conversation import ConversationAggregate
-from src.db.repositories.event import ConversationEventRepository
+from src.db.repositories.conversation_event import ConversationEventRepository
 
 
 class ConversationQueryHandler:

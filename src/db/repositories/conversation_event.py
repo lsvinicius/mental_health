@@ -15,9 +15,9 @@ class ConversationEventRepository(BaseRepository):
         self, conversation_id: str
     ) -> List[ConversationEvent]:
         stmt = (
-            select(self._model)
+            select(ConversationEvent)
             .where(ConversationEvent.conversation_id == conversation_id)
-            .order_by(self._model.timestamp)
+            .order_by(ConversationEvent.version)
         )
         results = await self._session.execute(stmt)
         return list(results.scalars().all())

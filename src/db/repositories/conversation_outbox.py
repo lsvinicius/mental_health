@@ -4,7 +4,7 @@ from typing import List
 from sqlalchemy import update, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.db.models.conversationoutbox import ConversationOutbox
+from src.db.models.conversation_outbox import ConversationOutbox
 from src.db.repositories.base import BaseRepository
 
 
@@ -23,6 +23,10 @@ class ConversationOutboxRepository(BaseRepository):
         await self._session.execute(stmt)
         return outbox
 
-    async def all(self) -> List[ConversationOutbox]:
-        results = await self._session.execute(select(ConversationOutbox))
+    async def all_unprocessed(self) -> List[ConversationOutbox]:
+        results = await self._session.execute(
+            select(ConversationOutbox)
+            .where(ConversationOutbox.is_processed == False)
+            .order_by(ConversationOutbox.created_at)
+        )
         return list(results.scalars().all())

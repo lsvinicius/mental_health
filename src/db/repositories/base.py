@@ -13,6 +13,10 @@ class BaseRepository[T: ModelWithId]:
         self._session = session
         self._model = model
 
+    @property
+    def session(self) -> AsyncSession:
+        return self._session
+
     async def save(self, obj: T) -> T:
         self._session.add(obj)
         return obj

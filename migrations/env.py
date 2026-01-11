@@ -1,6 +1,8 @@
 import asyncio
+import os
 from logging.config import fileConfig
 
+from dotenv import load_dotenv
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
@@ -34,6 +36,9 @@ target_metadata = Base.metadata
 # ... etc.
 
 
+load_dotenv()
+
+
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
 
@@ -46,7 +51,7 @@ def run_migrations_offline() -> None:
     script output.
 
     """
-    url = config.get_main_option("sqlalchemy.url")
+    url = os.getenv("db_connection_string")
     context.configure(
         url=url,
         target_metadata=target_metadata,

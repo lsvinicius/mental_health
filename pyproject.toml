@@ -15,7 +15,6 @@ asyncpg = "^0.31.0"
 uvicorn = "^0.40.0"
 python-dotenv = "^1.2.1"
 google-genai = "^1.57.0"
-types-pyyaml = "^6.0.12.20250915"
 
 
 [tool.poetry.group.tests.dependencies]

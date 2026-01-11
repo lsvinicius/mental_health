@@ -1235,17 +1235,6 @@ doc = ["reno", "sphinx"]
 test = ["pytest", "tornado (>=4.5)", "typeguard"]
 
 [[package]]
-name = "types-pyyaml"
-version = "6.0.12.20250915"
-description = "Typing stubs for PyYAML"
-optional = false
-python-versions = ">=3.9"
-files = [
-    {file = "types_pyyaml-6.0.12.20250915-py3-none-any.whl", hash = "sha256:e7d4d9e064e89a3b3cae120b4990cd370874d2bf12fa5f46c97018dd5d3c9ab6"},
-    {file = "types_pyyaml-6.0.12.20250915.tar.gz", hash = "sha256:0f8b54a528c303f0e6f7165687dd33fafa81c807fcac23f632b63aa624ced1d3"},
-]
-
-[[package]]
 name = "typing-extensions"
 version = "4.15.0"
 description = "Backported and Experimental Type Hints for Python 3.9+"
@@ -1406,4 +1395,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.13"
-content-hash = "921f1f455aab3911dd0b6f9139e6bffafae15564c7317cfafae8418ca0870205"
+content-hash = "a7f86a0cba446d46ec2b0cc4ecec3a16ccfef13b56a7a12455d2ac3f5a38b2aa"

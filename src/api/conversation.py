@@ -8,7 +8,6 @@ from src.api.dependencies import (
 )
 from src.api.schemas.conversation import (
     SendMessageRequest,
-    GetConversationRequest,
 )
 from src.dtos.conversation import ConversationDTO, ConversationRiskAnalysisDTO
 
@@ -67,12 +66,12 @@ async def new_message(
 async def get_conversation(
     user_id: str,
     conversation_id: str,
-    payload: GetConversationRequest,
     query_handler: ConversationQueryHandlerDependency,
+    timezone: str = "America/Sao_Paulo",
 ):
     """Get conversation."""
     try:
-        tz = ZoneInfo(payload.timezone)
+        tz = ZoneInfo(timezone)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 

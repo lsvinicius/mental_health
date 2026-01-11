@@ -20,7 +20,7 @@ class ConversationRiskAnalysisRepository(BaseRepository):
                 .where(
                     and_(
                         ConversationRiskAnalysis.conversation_id == conversation_id,
-                        ConversationRiskAnalysis.detected_risk is True,
+                        ConversationRiskAnalysis.detected_risk.is_(True),
                     )
                 )
                 .order_by(ConversationRiskAnalysis.created_at)

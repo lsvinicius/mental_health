@@ -23,14 +23,15 @@ class OutboxProcessor:
         self, forever: bool = True, interval: int = 5
     ) -> None:
         if forever:
-            await self._process_and_send_to_risk_analyzer()
             while True:
+                await self._process_and_send_to_risk_analyzer()
                 await asyncio.sleep(interval)
         else:
             await self._process_and_send_to_risk_analyzer()
 
     async def _process_and_send_to_risk_analyzer(self) -> None:
-        to_be_analyzed = await self._process()
+        async with self._session.begin():
+            to_be_analyzed = await self._process()
 
         async def request_conversation_risk_analysis(conversation_id_: str):
             pass
@@ -73,10 +74,9 @@ async def start(forever: bool = True, interval: int = 5):
         engine, expire_on_commit=False, class_=AsyncSession
     )
     async with async_session() as session:
-        async with session.begin():
-            await OutboxProcessor(session).process_and_send_to_risk_analyzer(
-                forever, interval
-            )
+        await OutboxProcessor(session).process_and_send_to_risk_analyzer(
+            forever, interval
+        )
 
 
 if __name__ == "__main__":

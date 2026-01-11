@@ -10,6 +10,7 @@ from src.shared.event_store import EventStore
 
 class ConversationCommandHandler:
     def __init__(self, session: AsyncSession):
+        self._session = session
         self._event_store = EventStore(session)
 
     async def start_conversation(self, user_id: str) -> str:
@@ -47,15 +48,16 @@ class ConversationCommandHandler:
         event_type: EventType,
         payload: Optional[dict] = None,
     ) -> None:
-        events = await self._event_store.retrieve_events(conversation_id)
-        aggregate = ConversationAggregate(conversation_id=conversation_id)
-        aggregate.apply_events(events)
+        async with self._session.begin():
+            events = await self._event_store.retrieve_events(conversation_id)
+            aggregate = ConversationAggregate(conversation_id=conversation_id)
+            aggregate.apply_events(events)
 
-        event = ConversationEvent(
-            conversation_id=conversation_id,
-            type=event_type,
-            payload=payload,
-            version=aggregate.version + 1,
-        )
-        aggregate.apply(event)
-        await self._event_store.append_event(event)
+            event = ConversationEvent(
+                conversation_id=conversation_id,
+                type=event_type,
+                payload=payload,
+                version=aggregate.version + 1,
+            )
+            aggregate.apply(event)
+            await self._event_store.append_event(event)

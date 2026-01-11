@@ -1,16 +1,20 @@
 import datetime
 from typing import Optional
 
-from sqlalchemy import Integer, JSON, Boolean, DateTime, String, ForeignKey
-from sqlalchemy.orm import mapped_column, Mapped
+from sqlalchemy import DateTime, ForeignKey
+from sqlalchemy.orm import mapped_column, Mapped, relationship
 
 from src.db.models.base import Base
+from src.db.models.event import ConversationEvent
 
 
 class ConversationOutbox(Base):
     __tablename__ = "conversation_outbox"
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True, init=False)
-    conversation_id: Mapped[str] = mapped_column(nullable=False)
+    event_id: Mapped[str] = mapped_column(
+        ForeignKey(ConversationEvent.id), nullable=False
+    )
+    event: Mapped[ConversationEvent] = relationship("ConversationEvent")
     is_processed: Mapped[bool] = mapped_column(default=False, nullable=False)
     created_at: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True),
@@ -20,4 +24,3 @@ class ConversationOutbox(Base):
     updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(
         nullable=True, default=None
     )
-    payload: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True, default=None)

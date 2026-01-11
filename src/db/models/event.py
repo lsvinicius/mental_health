@@ -1,9 +1,9 @@
 import datetime
 from enum import Enum
-from typing import Optional, Dict
+from typing import Optional
 from uuid import uuid4
 
-from sqlalchemy import JSON, DateTime, ForeignKey, String, Integer, UniqueConstraint
+from sqlalchemy import JSON, DateTime, UniqueConstraint
 from sqlalchemy.orm import mapped_column, Mapped
 
 from src.db.models.base import Base

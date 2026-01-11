@@ -1,6 +1,6 @@
 from typing import Any, Protocol, Type, Optional
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -28,3 +28,7 @@ class BaseRepository[T: ModelWithId]:
             select(self._model).where(self._model.id == id_)
         )
         return result.scalar()
+
+    async def update(self, id_: Any, **kwargs) -> None:
+        stmt = update(self._model).where(self._model.id == id_).values(**kwargs)
+        await self._session.execute(stmt)

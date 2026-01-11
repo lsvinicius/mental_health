@@ -15,15 +15,10 @@ class EventStore:
         self._outbox_repository = ConversationOutboxRepository(session)
 
     async def append_event(self, event: ConversationEvent) -> None:
-        async with self._session:
-            await self._conversation_event_repository.save(event)
-            await self._session.flush()
-            await self._outbox_repository.save(
-                ConversationOutbox(
-                    payload=event.payload, conversation_id=event.conversation_id
-                )
-            )
-            await self._session.commit()
+        await self._conversation_event_repository.save(event)
+        await self._outbox_repository.save(
+            ConversationOutbox(event_id=event.id, event=event)
+        )
 
     async def retrieve_events(self, conversation_id: str) -> List[ConversationEvent]:
         return await self._conversation_event_repository.get_all_conversation_events(

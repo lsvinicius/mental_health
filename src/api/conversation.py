@@ -1,27 +1,22 @@
+from zoneinfo import ZoneInfo
+
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
 from src.api.dependencies import (
     ConversationCommandHandlerDependency,
     ConversationQueryHandlerDependency,
+    RiskAnalyzerCreatorDependency,
+    ConversationRiskAnalysisRepositoryDependency,
 )
-
-# from src.db.models.conversation import Conversation
+from src.api.schemas.conversation import (
+    StartConversationRequest,
+    DeleteConversationRequest,
+    SendMessageRequest,
+    GetConversationRequest,
+    AnalyzeConversationRiskRequest,
+)
+from src.dtos.conversation import ConversationDTO, ConversationRiskAnalysisDTO
 
 router = APIRouter()
-
-
-# Request Models
-class StartConversationRequest(BaseModel):
-    user_id: str
-
-
-class SendMessageRequest(BaseModel):
-    text: str
-    sender: str
-
-
-class DeleteConversationRequest(BaseModel):
-    user_id: str
 
 
 # Routes
@@ -73,15 +68,54 @@ async def new_message(
 
 @router.get("/conversations/{conversation_id}")
 async def get_conversation(
-    conversation_id: str, command_handler: ConversationQueryHandlerDependency
+    conversation_id: str,
+    payload: GetConversationRequest,
+    query_handler: ConversationQueryHandlerDependency,
 ):
     """Get conversation."""
-    # aggregate = await command_handler.get_conversation_aggregate(conversation_id)
+    try:
+        tz = ZoneInfo(payload.timezone)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
-    return {}
+    conversation = await query_handler.get_conversation(conversation_id)
+    if not conversation:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+
+    dto = ConversationDTO.model_validate(conversation)
+    return dto.to_timezone(tz)
 
 
-@router.get("/health")
-async def health_check():
-    """Health check"""
-    return {"status": "healthy"}
+@router.post("/conversations/{conversation_id}/analyze_risk")
+async def analyze_risk(
+    conversation_id: str,
+    payload: AnalyzeConversationRiskRequest,
+    risk_analyzer_creator: RiskAnalyzerCreatorDependency,
+):
+    """Analyze risk."""
+    risk_analyzer = risk_analyzer_creator(payload.model)
+    try:
+        risk_analysis = await risk_analyzer.analyze(conversation_id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    return ConversationRiskAnalysisDTO.model_validate(risk_analysis)
+
+
+@router.get("/conversations/{conversation_id}/risk_analyzes")
+async def get_conversation_analyses_risk(
+    conversation_id: str,
+    conversation_risk_analysis_repository: ConversationRiskAnalysisRepositoryDependency,
+    return_risk_ones_only: bool = True,
+):
+    """Get risk analyzes."""
+    risk_analyses = await conversation_risk_analysis_repository.get_all(
+        conversation_id, return_risk_ones_only
+    )
+    return {
+        "risk_analyses": [
+            ConversationRiskAnalysisDTO.model_validate(risk_analysis)
+            for risk_analysis in risk_analyses
+        ]
+    }

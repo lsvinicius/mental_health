@@ -1,4 +1,4 @@
-from typing import Any, Protocol, Type, Optional
+from typing import Any, Protocol, Type, Optional, List
 
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -28,6 +28,10 @@ class BaseRepository[T: ModelWithId]:
             select(self._model).where(self._model.id == id_)
         )
         return result.scalar()
+
+    async def all(self) -> List[T]:
+        result = await self._session.execute(select(self._model))
+        return list(result.scalars().all())
 
     async def update(self, id_: Any, **kwargs) -> None:
         stmt = update(self._model).where(self._model.id == id_).values(**kwargs)

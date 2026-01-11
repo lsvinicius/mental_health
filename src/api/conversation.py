@@ -8,25 +8,23 @@ from src.api.dependencies import (
     ConversationRiskAnalysisRepositoryDependency,
 )
 from src.api.schemas.conversation import (
-    StartConversationRequest,
-    DeleteConversationRequest,
     SendMessageRequest,
     GetConversationRequest,
     AnalyzeConversationRiskRequest,
 )
 from src.dtos.conversation import ConversationDTO, ConversationRiskAnalysisDTO
 
-router = APIRouter()
+router = APIRouter(prefix="/{user_id}")
 
 
 # Routes
 @router.post("/conversations", status_code=201)
 async def start_conversation(
-    request: StartConversationRequest,
+    user_id: str,
     command_handler: ConversationCommandHandlerDependency,
 ):
     """Start a new conversation."""
-    conversation_id = await command_handler.start_conversation(request.user_id)
+    conversation_id = await command_handler.start_conversation(user_id)
     return {
         "conversation_id": conversation_id,
     }
@@ -35,12 +33,12 @@ async def start_conversation(
 @router.delete("/conversations/{conversation_id}", status_code=201)
 async def delete_conversation(
     conversation_id: str,
-    request: DeleteConversationRequest,
+    user_id: str,
     command_handler: ConversationCommandHandlerDependency,
 ):
     """Send messages to a conversation."""
     try:
-        await command_handler.delete_conversation(request.user_id, conversation_id)
+        await command_handler.delete_conversation(user_id, conversation_id)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     return {
@@ -51,13 +49,14 @@ async def delete_conversation(
 @router.post("/conversations/{conversation_id}/messages", status_code=201)
 async def new_message(
     conversation_id: str,
+    user_id: str,
     request: SendMessageRequest,
     command_handler: ConversationCommandHandlerDependency,
 ):
     """Send messages to a conversation."""
     try:
         message_id = await command_handler.new_message(
-            conversation_id, request.text, request.sender
+            user_id, conversation_id, request.text, request.sender
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

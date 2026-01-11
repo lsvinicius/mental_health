@@ -18,6 +18,7 @@ class EventType(str, Enum):
 class ConversationEvent(Base):
     __tablename__ = "conversations_events"
     conversation_id: Mapped[str] = mapped_column(nullable=False)
+    user_id: Mapped[str] = mapped_column(nullable=False)
     version: Mapped[int] = mapped_column(nullable=False)
     type: Mapped[EventType] = mapped_column(nullable=False)
     payload: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True, default=None)

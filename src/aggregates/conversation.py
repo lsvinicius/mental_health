@@ -13,8 +13,9 @@ class ConversationStatus(str, Enum):
 
 
 class ConversationAggregate:
-    def __init__(self, conversation_id: str):
+    def __init__(self, conversation_id: str, user_id: str) -> None:
         self._conversation_id = conversation_id
+        self._user_id = user_id
         self._version = 0
         self._status: Optional[ConversationStatus] = None
         self._messages: List[Tuple[Optional[dict], datetime.datetime]] = []
@@ -42,6 +43,14 @@ class ConversationAggregate:
         if event.type == EventType.CONVERSATION_STARTED:
             self._handle_conversation_started()
         elif event.type == EventType.CONVERSATION_DELETED:
+            if self._conversation_id != event.conversation_id:
+                raise ValueError(
+                    f"Cannot delete conversation {self._conversation_id} because event conversation is {event.conversation_id}"
+                )
+            if self._user_id != event.user_id:
+                raise ValueError(
+                    f"User {event.user_id} cannot delete conversation {self.conversation_id} because it is owned by {self._user_id}"
+                )
             self._handle_conversation_deleted()
         elif event.type == EventType.NEW_MESSAGE:
             self._handle_new_message(event)

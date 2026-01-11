@@ -18,16 +18,20 @@ class ConversationCommandHandler:
         conversation_id = str(uuid4())
         await self._handle_command(
             conversation_id,
+            user_id=user_id,
             event_type=EventType.CONVERSATION_STARTED,
             payload={"user_id": user_id},
         )
         return conversation_id
 
-    async def new_message(self, conversation_id: str, text: str, sender: str) -> str:
+    async def new_message(
+        self, user_id: str, conversation_id: str, text: str, sender: str
+    ) -> str:
         """Add a new message to the conversation."""
         message_id = str(uuid4())
         await self._handle_command(
             conversation_id,
+            user_id,
             EventType.NEW_MESSAGE,
             payload={"sender": sender, "text": text, "message_id": message_id},
         )
@@ -37,24 +41,29 @@ class ConversationCommandHandler:
         """Delete a message from the conversation."""
         await self._handle_command(
             conversation_id,
+            user_id,
             EventType.CONVERSATION_DELETED,
-            payload={"user_id": user_id},
+            payload={"conversation_id": conversation_id},
         )
         return conversation_id
 
     async def _handle_command(
         self,
         conversation_id: str,
+        user_id: str,
         event_type: EventType,
         payload: Optional[dict] = None,
     ) -> None:
         async with self._session.begin():
             events = await self._event_store.retrieve_events(conversation_id)
-            aggregate = ConversationAggregate(conversation_id=conversation_id)
+            aggregate = ConversationAggregate(
+                conversation_id=conversation_id, user_id=user_id
+            )
             aggregate.apply_events(events)
 
             event = ConversationEvent(
                 conversation_id=conversation_id,
+                user_id=user_id,
                 type=event_type,
                 payload=payload,
                 version=aggregate.version + 1,

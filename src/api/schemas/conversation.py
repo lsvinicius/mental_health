@@ -1,20 +1,9 @@
-from typing import Optional
-
 from pydantic import BaseModel
-
-
-# Request Models
-class StartConversationRequest(BaseModel):
-    user_id: str
 
 
 class SendMessageRequest(BaseModel):
     text: str
     sender: str
-
-
-class DeleteConversationRequest(BaseModel):
-    user_id: str
 
 
 class GetConversationRequest(BaseModel):

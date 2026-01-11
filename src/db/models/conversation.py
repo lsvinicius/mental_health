@@ -43,7 +43,7 @@ class ConversationMessage(Base):
     conversation_id: Mapped[str] = mapped_column(ForeignKey("conversations.id"))
     text: Mapped[str] = mapped_column(nullable=False)
     sender: Mapped[str] = mapped_column(ForeignKey("users.email"))
-    version: Mapped[int] = mapped_column(primary_key=True, nullable=False)
+    version: Mapped[int] = mapped_column(nullable=False)
     conversation: Mapped[Optional[Conversation]] = relationship(
         back_populates="messages", default=None
     )

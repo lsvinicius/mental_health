@@ -1,9 +1,7 @@
 import pytest
 
-from src.api.dependencies import get_db_session
 from src.api.user import CreateUserRequest
 from src.db.repositories.user import UserRepository
-from src.main import app
 
 
 @pytest.mark.asyncio(loop_scope="session")

@@ -1,26 +1,21 @@
 import pytest
 
 from src.api.schemas.conversation import SendMessageRequest
-from src.api.user import CreateUserRequest
 from src.db.models.event import EventType
 from src.db.repositories.conversation_event import ConversationEventRepository
 from src.db.repositories.conversation_outbox import ConversationOutboxRepository
 
 
 @pytest.mark.asyncio(loop_scope="session")
-async def test_create_conversation(db_session, client):
+async def test_create_conversation(db_session, client, create_user):
     # given
     conversation_event_repository = ConversationEventRepository(db_session)
     outbox_repository = ConversationOutboxRepository(db_session)
-    payload = CreateUserRequest(username="vini", email="vini@vini.com")
-    response = await client.post("/api/v1/users", json=payload.model_dump())
-    response = response.json()
-    user_id = response["user_id"]
+    result = await create_user("vini", "vini@vini.com")
+    user_id = result["user_id"]
 
     # when
-    response = await client.post(
-        f"/api/v1/{user_id}/conversations", json=payload.model_dump()
-    )
+    response = await client.post(f"/api/v1/{user_id}/conversations")
 
     # then
     assert response.status_code == 201
@@ -44,18 +39,14 @@ async def test_create_conversation(db_session, client):
 
 
 @pytest.mark.asyncio(loop_scope="session")
-async def test_send_new_message(db_session, client):
+async def test_send_new_message(db_session, client, create_user, create_conversation):
     # given
     conversation_event_repository = ConversationEventRepository(db_session)
     outbox_repository = ConversationOutboxRepository(db_session)
-    payload = CreateUserRequest(username="vini", email="vini@vini.com")
-    response = await client.post("/api/v1/users", json=payload.model_dump())
-    response = response.json()
-    user_id = response["user_id"]
-    response = await client.post(
-        f"/api/v1/{user_id}/conversations", json=payload.model_dump()
-    )
-    conversation_id = response.json()["conversation_id"]
+    result = await create_user("vini", "vini@vini.com")
+    user_id = result["user_id"]
+    result = await create_conversation(user_id)
+    conversation_id = result["conversation_id"]
 
     # when
     payload = SendMessageRequest(text="hello", sender="vini")
@@ -90,24 +81,15 @@ async def test_send_new_message(db_session, client):
 
 
 @pytest.mark.asyncio(loop_scope="session")
-async def test_delete_conversation(db_session, client):
+async def test_delete_conversation(
+    db_session, client, create_user, create_conversation, create_message
+):
     # given
     conversation_event_repository = ConversationEventRepository(db_session)
     outbox_repository = ConversationOutboxRepository(db_session)
-    payload = CreateUserRequest(username="vini", email="vini@vini.com")
-    response = await client.post("/api/v1/users", json=payload.model_dump())
-    response = response.json()
-    user_id = response["user_id"]
-    response = await client.post(
-        f"/api/v1/{user_id}/conversations", json=payload.model_dump()
-    )
-    conversation_id = response.json()["conversation_id"]
-    payload = SendMessageRequest(text="hello", sender="vini")
-    response = await client.post(
-        f"/api/v1/{user_id}/conversations/{conversation_id}/messages",
-        json=payload.model_dump(),
-    )
-    message_id = response.json()["message_id"]
+    user_id = (await create_user("vini", "vini@vini.com"))["user_id"]
+    conversation_id = (await create_conversation(user_id))["conversation_id"]
+    await create_message(user_id, conversation_id, "hi", "vini")
 
     # when
     response = await client.delete(f"/api/v1/{user_id}/conversations/{conversation_id}")

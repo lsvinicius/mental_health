@@ -22,5 +22,5 @@ class ConversationOutbox(Base):
         default_factory=lambda: datetime.datetime.now(datetime.UTC),
     )
     updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(
-        nullable=True, default=None
+        DateTime(timezone=True), nullable=True, default=None
     )

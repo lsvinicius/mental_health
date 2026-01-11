@@ -1,31 +1,14 @@
-import pytest
-import asyncio
-
 import pytest_asyncio
 from httpx import AsyncClient, ASGITransport
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
-from testcontainers.postgres import PostgresContainer
 
 from src.api.dependencies import get_db_session
+from src.api.schemas.conversation import SendMessageRequest
+from src.api.user import CreateUserRequest
 from src.db.models.base import Base
 from src.main import app
-from src.db.models.conversation import Conversation
-from src.db.models.user import User
-from src.db.models.event import ConversationEvent
-from src.db.models.conversation_outbox import ConversationOutbox
 
-import pytest
-import asyncio
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from testcontainers.postgres import PostgresContainer
-
-
-# 1. Garante um único loop para toda a sessão de testes
-@pytest.fixture(scope="session")
-def event_loop():
-    loop = asyncio.get_event_loop_policy().new_event_loop()
-    yield loop
-    loop.close()
 
 
 @pytest_asyncio.fixture(scope="session")
@@ -84,3 +67,35 @@ async def client(db_session):
 
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
+
+
+@pytest_asyncio.fixture
+async def create_user(db_session, client):
+    async def _create_user(username, email):
+        payload = CreateUserRequest(username=username, email=email)
+        response = await client.post("/api/v1/users", json=payload.model_dump())
+        return response.json()
+
+    return _create_user
+
+
+@pytest_asyncio.fixture
+async def create_conversation(db_session, client):
+    async def _setup_conversation(user_id) -> dict:
+        response = await client.post(f"/api/v1/{user_id}/conversations")
+        return response.json()
+
+    return _setup_conversation
+
+
+@pytest_asyncio.fixture
+async def create_message(db_session, client):
+    async def _new_conversation(user_id, conversation_id, text, sender) -> dict:
+        payload = SendMessageRequest(text=text, sender=sender)
+        response = await client.post(
+            f"/api/v1/{user_id}/conversations/{conversation_id}/messages",
+            json=payload.model_dump(),
+        )
+        return response.json()
+
+    return _new_conversation

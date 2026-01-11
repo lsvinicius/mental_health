@@ -1,7 +1,7 @@
-import datetime
 from typing import List
 
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.db.models.conversation_outbox import ConversationOutbox
@@ -16,9 +16,7 @@ class ConversationOutboxRepository(BaseRepository):
         results = await self._session.execute(
             select(ConversationOutbox)
             .where(ConversationOutbox.is_processed == False)
+            .options(selectinload(ConversationOutbox.event))
             .order_by(ConversationOutbox.created_at)
         )
-        results = list(results.scalars().all())
-        for r in results:
-            await self._session.refresh(r, attribute_names=["event"])
-        return results
+        return list(results.scalars().all())

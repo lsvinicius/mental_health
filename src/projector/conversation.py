@@ -21,7 +21,10 @@ class ConversationProjector:
         event = conversation_outbox.event
         if event.type == EventType.CONVERSATION_STARTED:
             user_id = event.payload["user_id"]
-            user = await self._user_repository.get(user_id)
+            user_or_none = await self._user_repository.get(user_id)
+            if user_or_none is None:
+                raise ValueError(f"User {user_id} not found")
+            user = user_or_none
             conversation = Conversation(
                 user_id=event.payload["user_id"],
                 id=event.conversation_id,
@@ -31,9 +34,16 @@ class ConversationProjector:
             await self._conversation_repository.save(conversation)
         elif event.type == EventType.NEW_MESSAGE:
             message_id = event.payload["message_id"]
+            conversation_or_none = await self._conversation_repository.get(
+                event.conversation_id
+            )
+            if conversation_or_none is None:
+                raise ValueError(f"Conversation {event.conversation_id} not found")
+            conversation = conversation_or_none
             message = ConversationMessage(
                 id=message_id,
                 conversation_id=event.conversation_id,
+                conversation=conversation,
                 text=event.payload["text"],
                 sender=event.payload["sender"],
                 version=event.version,

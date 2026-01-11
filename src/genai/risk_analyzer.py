@@ -30,7 +30,6 @@ class RiskAnalyzer:
             conversation = await self._conversation_repository.get(conversation_id)
             if not conversation:
                 raise ValueError(f"No conversation with id {conversation_id}")
-            await self._session.refresh(conversation, attribute_names=["messages"])
             formatted_prompt = yaml.dump(self._prompt, allow_unicode=True).replace(
                 "{{conversation_history}}", conversation.to_text()
             )

@@ -6,7 +6,6 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sess
 
 from src.db.models.event import EventType
 from src.db.repositories.conversation_outbox import ConversationOutboxRepository
-from src.genai.risk_analyzer import RiskAnalyzer
 from src.projector.conversation import ConversationProjector
 from src.settings import settings
 
@@ -31,10 +30,11 @@ class OutboxProcessor:
             await self._process_and_send_to_risk_analyzer()
 
     async def _process_and_send_to_risk_analyzer(self) -> None:
+        to_be_analyzed = await self._process()
+
         async def request_conversation_risk_analysis(conversation_id_: str):
             pass
 
-        to_be_analyzed = await self._process()
         async with asyncio.TaskGroup() as tg:
             for conversation_id in to_be_analyzed:
                 # I hope this doesn't have same issue as asyncio.create_task
@@ -63,7 +63,7 @@ class OutboxProcessor:
             else:
                 outbox.is_processed = True
                 outbox.updated_at = datetime.datetime.now(datetime.UTC)
-            self._session.add(outbox)
+                self._session.add(outbox)
         return [conv_id for conv_id, analyze in to_be_analyzed.items() if analyze]
 
 

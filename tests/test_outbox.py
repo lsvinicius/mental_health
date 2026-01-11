@@ -1,5 +1,6 @@
 import asyncio
 import json
+from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
@@ -67,7 +68,9 @@ async def test_outbox_process_and_project_and_request_risk_analysis(
     user_id = (await create_user("vini", "vini@vini.com"))["user_id"]
     conversation_id = (await create_conversation(user_id))["conversation_id"]
     await create_message(user_id, conversation_id, "hi", "vini@vini.com")
-    processor = OutboxProcessor(db_session, base_url)
+    processor = OutboxProcessor(
+        db_session, base_url, str(Path.cwd() / "prompts" / "risk_analyzer.yaml")
+    )
     analysis = """
     {
     "clinical_reasoning": "The conversation contains only a simple greeting and does not provide any indicators of self-harm or suicidal ideation, planning, intent, or history.",
@@ -113,7 +116,9 @@ async def test_outbox_process_and_project_and_request_risk_analysis_for_risky_me
     await create_message(
         user_id, conversation_id, "I want to die", "anonymous@email.com"
     )
-    processor = OutboxProcessor(db_session, base_url)
+    processor = OutboxProcessor(
+        db_session, base_url, str(Path.cwd() / "prompts" / "risk_analyzer.yaml")
+    )
     analysis = """
     {
       "risk_found": true,

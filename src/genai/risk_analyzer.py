@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from typing import Optional
 
@@ -15,15 +16,13 @@ class RiskAnalyzer:
         self,
         session: AsyncSession,
         ai_client: AIAnalyzerClient,
-        prompt_path: Optional[str] = None,
+        prompt_path: str,
     ):
         self._session = session
         self._ai_client = ai_client
         self._conversation_repository = ConversationRepository(session)
         self._conversation_risk_repository = ConversationRiskAnalysisRepository(session)
-        self._prompt = _load_config(
-            prompt_path or str(Path.cwd() / "prompts" / "risk_analyzer.yaml")
-        )
+        self._prompt = _load_config(prompt_path)
 
     async def analyze(self, conversation_id: str) -> ConversationRiskAnalysis:
         conversation = await self._conversation_repository.get(conversation_id)

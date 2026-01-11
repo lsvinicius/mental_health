@@ -65,6 +65,7 @@ async def new_message(
 
 @router.get("/conversations/{conversation_id}")
 async def get_conversation(
+    user_id: str,
     conversation_id: str,
     payload: GetConversationRequest,
     query_handler: ConversationQueryHandlerDependency,
@@ -79,17 +80,33 @@ async def get_conversation(
     if not conversation:
         raise HTTPException(status_code=404, detail="Conversation not found")
 
+    if conversation.user_id != user_id:
+        raise HTTPException(
+            status_code=403, detail="Forbidden: Conversation does not belong to user"
+        )
+
     dto = ConversationDTO.model_validate(conversation)
     return dto.to_timezone(tz)
 
 
 @router.get("/conversations/{conversation_id}/risk_analyzes")
 async def get_conversation_analyses_risk(
+    user_id: str,
     conversation_id: str,
+    query_handler: ConversationQueryHandlerDependency,
     conversation_risk_analysis_repository: ConversationRiskAnalysisRepositoryDependency,
     return_risk_ones_only: bool = True,
 ):
     """Get risk analyzes."""
+    conversation = await query_handler.get_conversation(conversation_id)
+    if not conversation:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+
+    if conversation.user_id != user_id:
+        raise HTTPException(
+            status_code=403, detail="Forbidden: Conversation does not belong to user"
+        )
+
     risk_analyses = await conversation_risk_analysis_repository.all(
         conversation_id, return_risk_ones_only
     )

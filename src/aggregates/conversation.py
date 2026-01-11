@@ -43,15 +43,7 @@ class ConversationAggregate:
         if event.type == EventType.CONVERSATION_STARTED:
             self._handle_conversation_started()
         elif event.type == EventType.CONVERSATION_DELETED:
-            if self._conversation_id != event.conversation_id:
-                raise ValueError(
-                    f"Cannot delete conversation {self._conversation_id} because event conversation is {event.conversation_id}"
-                )
-            if self._user_id != event.user_id:
-                raise ValueError(
-                    f"User {event.user_id} cannot delete conversation {self.conversation_id} because it is owned by {self._user_id}"
-                )
-            self._handle_conversation_deleted()
+            self._handle_conversation_deleted(event)
         elif event.type == EventType.NEW_MESSAGE:
             self._handle_new_message(event)
         else:
@@ -68,9 +60,21 @@ class ConversationAggregate:
             raise ValueError(
                 f"Cannot add message to conversation with status '{self._status}'"
             )
+        if self._user_id != event.user_id:
+            raise ValueError(
+                f"User {event.user_id} cannot add message to conversation {self.conversation_id} because it is owned by {self._user_id}"
+            )
         self._messages.append((event.payload, event.created_at))
 
-    def _handle_conversation_deleted(self) -> None:
+    def _handle_conversation_deleted(self, event: ConversationEvent) -> None:
+        if self._conversation_id != event.conversation_id:
+            raise ValueError(
+                f"Cannot delete conversation {self._conversation_id} because event conversation is {event.conversation_id}"
+            )
+        if self._user_id != event.user_id:
+            raise ValueError(
+                f"User {event.user_id} cannot delete conversation {self.conversation_id} because it is owned by {self._user_id}"
+            )
         if self._status != ConversationStatus.ACTIVE:
             raise ValueError(f"Cannot delete conversation with status '{self._status}'")
         self._status = ConversationStatus.INACTIVE

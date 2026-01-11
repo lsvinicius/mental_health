@@ -4,13 +4,11 @@ from fastapi import APIRouter, HTTPException
 from src.api.dependencies import (
     ConversationCommandHandlerDependency,
     ConversationQueryHandlerDependency,
-    RiskAnalyzerCreatorDependency,
     ConversationRiskAnalysisRepositoryDependency,
 )
 from src.api.schemas.conversation import (
     SendMessageRequest,
     GetConversationRequest,
-    AnalyzeConversationRiskRequest,
 )
 from src.dtos.conversation import ConversationDTO, ConversationRiskAnalysisDTO
 
@@ -85,23 +83,6 @@ async def get_conversation(
     return dto.to_timezone(tz)
 
 
-@router.post("/conversations/{conversation_id}/analyze_risk")
-async def analyze_risk(
-    conversation_id: str,
-    payload: AnalyzeConversationRiskRequest,
-    risk_analyzer_creator: RiskAnalyzerCreatorDependency,
-):
-    """Analyze risk."""
-    risk_analyzer = risk_analyzer_creator(payload.model)
-    try:
-        risk_analysis = await risk_analyzer.analyze(conversation_id)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    return ConversationRiskAnalysisDTO.model_validate(risk_analysis)
-
-
 @router.get("/conversations/{conversation_id}/risk_analyzes")
 async def get_conversation_analyses_risk(
     conversation_id: str,
@@ -109,7 +90,7 @@ async def get_conversation_analyses_risk(
     return_risk_ones_only: bool = True,
 ):
     """Get risk analyzes."""
-    risk_analyses = await conversation_risk_analysis_repository.get_all(
+    risk_analyses = await conversation_risk_analysis_repository.all(
         conversation_id, return_risk_ones_only
     )
     return {

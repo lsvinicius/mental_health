@@ -29,7 +29,7 @@ class BaseRepository[T: ModelWithId]:
         )
         return result.scalar()
 
-    async def all(self) -> List[T]:
+    async def all(self, *args, **kwargs) -> List[T]:
         result = await self._session.execute(select(self._model))
         return list(result.scalars().all())
 

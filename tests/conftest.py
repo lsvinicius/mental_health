@@ -1,3 +1,4 @@
+import pytest
 import pytest_asyncio
 from httpx import AsyncClient, ASGITransport
 
@@ -60,12 +61,17 @@ async def db_session(engine):
     await connection.close()
 
 
+@pytest.fixture
+def base_url():
+    return "http://test"
+
+
 @pytest_asyncio.fixture
-async def client(db_session):
+async def client(db_session, base_url):
     transport = ASGITransport(app=app)
     app.dependency_overrides[get_db_session] = lambda: db_session
 
-    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+    async with AsyncClient(transport=transport, base_url=base_url) as ac:
         yield ac
 
 

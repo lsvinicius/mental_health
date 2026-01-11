@@ -26,23 +26,20 @@ class RiskAnalyzer:
         )
 
     async def analyze(self, conversation_id: str) -> ConversationRiskAnalysis:
-        async with self._session.begin():
-            conversation = await self._conversation_repository.get(conversation_id)
-            if not conversation:
-                raise ValueError(f"No conversation with id {conversation_id}")
-            formatted_prompt = yaml.dump(self._prompt, allow_unicode=True).replace(
-                "{{conversation_history}}", conversation.to_text()
-            )
-            ai_analysis = await self._ai_client.get_risk_assessment(
-                prompt=formatted_prompt
-            )
-            risk = ConversationRiskAnalysis(
-                conversation_id=conversation_id,
-                analysis=ai_analysis.model_dump(),
-                detected_risk=ai_analysis.risk_found or False,
-            )
-            await self._conversation_risk_repository.save(risk)
-            return risk
+        conversation = await self._conversation_repository.get(conversation_id)
+        if not conversation:
+            raise ValueError(f"No conversation with id {conversation_id}")
+        formatted_prompt = yaml.dump(self._prompt, allow_unicode=True).replace(
+            "{{conversation_history}}", conversation.to_text()
+        )
+        ai_analysis = await self._ai_client.get_risk_assessment(prompt=formatted_prompt)
+        risk = ConversationRiskAnalysis(
+            conversation_id=conversation_id,
+            analysis=ai_analysis.model_dump(),
+            detected_risk=ai_analysis.risk_found or False,
+        )
+        await self._conversation_risk_repository.save(risk)
+        return risk
 
 
 def _load_config(path: str) -> dict:

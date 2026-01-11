@@ -11,7 +11,7 @@ class ConversationRiskAnalysisRepository(BaseRepository):
     def __init__(self, session: AsyncSession):
         super().__init__(session, ConversationRiskAnalysis)
 
-    async def get_all(
+    async def all(
         self, conversation_id: str, return_only_risky_ones: bool = True
     ) -> List[ConversationRiskAnalysis]:
         if return_only_risky_ones:

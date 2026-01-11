@@ -14,7 +14,7 @@ class UnableToAnalyzeError(Exception):
 
 class AIAnalysis(BaseModel):
     risk_found: Optional[bool] = None
-    risk_level: Optional[int] = None
+    risk_level: Optional[str] = None
     detected_indicators: Optional[List[str]] = None
     clinical_reasoning: Optional[str] = None
     recommended_action: Optional[str] = None

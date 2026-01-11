@@ -7,7 +7,7 @@ instructions:
   rules:
     - "The response must be strictly raw JSON."
     - "Do not include explanations, introductions, or markdown code blocks (e.g., no ```json)."
-    - "If no risk is detected, set 'risk_level' to 'none'."
+    - "If no risk is detected, set 'risk_level' to null."
     - "If there is an imminent risk, set 'risk_level' to 'high'."
   categories:
     - "ideation: Thoughts about death or hurting oneself."
@@ -17,10 +17,10 @@ instructions:
 output_format:
   structure:
     risk_found: "boolean"
-    risk_level: "string (none, low, medium, high)"
+    risk_level: "string (null, low, medium, high)"
     detected_indicators: "list of strings"
     clinical_reasoning: "string (brief technical explanation)"
-    recommended_action: "string (e.g., immediate intervention, monitoring, none)"
+    recommended_action: "string (e.g., immediate intervention, monitoring, null)"
   example: |
     {
       "risk_found": true,

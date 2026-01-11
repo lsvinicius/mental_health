@@ -1,3 +1,4 @@
+import asyncio
 import json
 
 from google import genai
@@ -12,7 +13,11 @@ class GoogleGenAIClient(AIAnalyzerClient):
         self._model_id = self._kwargs.get("model_id", "gemini-2.0-flash")
 
     async def _get_risk_assessment(self, prompt: str) -> AIAnalysis:
-        response = self._client.models.generate_content(
-            model=self._model_id, contents=prompt
+        response = await asyncio.to_thread(
+            self._client.models.generate_content, model=self._model_id, contents=prompt
         )
-        return AIAnalysis(**json.loads(response.text))
+
+        # some models send markdown even when requested not to
+        text = response.text.replace("```json", "").replace("```", "")
+
+        return AIAnalysis(**json.loads(text))

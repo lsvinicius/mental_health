@@ -24,16 +24,20 @@ logger = logging.getLogger(__name__)
 async def _do_risk_analysis(
     session: AsyncSession, conversation_id: str, prompt_path: str
 ) -> None:
-    ai_client = create_analyzer_client(
-        AnalyzerClientProvider.google_genai,
-        api_key=settings.google_api_key,
-        model_id="gemini-2.5-flash-lite",
-    )
-    risk_analyzer = RiskAnalyzer(session, ai_client, prompt_path)
     try:
+        ai_client = create_analyzer_client(
+            AnalyzerClientProvider.google_genai,
+            api_key=settings.google_api_key,
+            model_id="gemini-2.5-flash-lite",
+        )
+        risk_analyzer = RiskAnalyzer(session, ai_client, prompt_path)
         await risk_analyzer.analyze(conversation_id)
     except Exception as e:
-        logger.error(f"Cannot do risk analysis. Error happened when processing: {e}")
+        logger.error(
+            f"Cannot do risk analysis for {conversation_id}. Error happened when processing: {e}"
+        )
+    else:
+        logger.info(f"Risk analysis done for conversation {conversation_id}")
 
 
 class OutboxProcessor:
@@ -49,8 +53,9 @@ class OutboxProcessor:
         self._conversation_repository = ConversationRepository(session)
         self._analyze_request_timeout = analyze_request_timeout
         self._prompt_path = prompt_path or str(
-            Path.cwd() / ".." / "prompts" / "risk_analyzer.yaml"
+            Path.cwd() / "prompts" / "risk_analyzer.yaml"
         )
+        logger.info(f"Using prompt path: {self._prompt_path}")
 
     async def process_and_send_to_risk_analyzer(
         self, forever: bool = True, interval: int = 5
@@ -59,7 +64,10 @@ class OutboxProcessor:
         if forever:
             while True:
                 logger.info(f"Processing messages...")
-                await self._process_and_send_to_risk_analyzer()
+                try:
+                    await self._process_and_send_to_risk_analyzer()
+                except Exception as e:
+                    logger.error(f"Error happened during outbox processing: {e}")
                 logger.info(f"Will wait for next {interval} seconds")
                 await asyncio.sleep(interval)
         else:
@@ -68,16 +76,21 @@ class OutboxProcessor:
 
     async def _process_and_send_to_risk_analyzer(self) -> None:
         async with self._session.begin():
+            logger.info("Processing outbox entries...")
             to_be_analyzed = await self._process()
-            async with asyncio.TaskGroup() as tg:
-                for conversation_id in to_be_analyzed:
-                    # I hope this doesn't have same issue as asyncio.create_task
-                    # https://docs.python.org/3/library/asyncio-task.html#asyncio.create_task
-                    tg.create_task(
-                        _do_risk_analysis(
-                            self._session, conversation_id, self._prompt_path
-                        )
-                    )
+            logger.info(
+                f"Outbox processing done. Conversations to be analyzed: {to_be_analyzed}"
+            )
+            await self._request_risk_analysis(to_be_analyzed)
+
+    async def _request_risk_analysis(self, to_be_analyzed: list[str]) -> None:
+        async with asyncio.TaskGroup() as tg:
+            for conversation_id in to_be_analyzed:
+                # I hope this doesn't have same issue as asyncio.create_task
+                # https://docs.python.org/3/library/asyncio-task.html#asyncio.create_task
+                tg.create_task(
+                    _do_risk_analysis(self._session, conversation_id, self._prompt_path)
+                )
 
     async def _process(self) -> list[str]:
         outboxes = await self._outbox_repository.all_unprocessed()

@@ -35,7 +35,7 @@ async def lifespan(app_: FastAPI):
         await task
     except Exception:
         pass
-    await session.close()
+    await session.aclose()
 
 
 app = FastAPI(

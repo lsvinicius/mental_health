@@ -15,14 +15,14 @@ from src.outbox_processor import OutboxProcessor
 
 @pytest.mark.asyncio(loop_scope="session")
 async def test_outbox_process_and_project(
-    db_session, create_user, create_conversation, create_message, base_url
+    db_session, create_user, create_conversation, create_message
 ):
     # given
     user_id = (await create_user("vini", "vini@vini.com"))["user_id"]
     conversation_id = (await create_conversation(user_id))["conversation_id"]
     await create_message(user_id, conversation_id, "hi", "vini@vini.com")
 
-    processor = OutboxProcessor(db_session, base_url)
+    processor = OutboxProcessor(db_session)
 
     # when
     conversations = await processor._process()
@@ -62,14 +62,14 @@ async def test_outbox_process_and_project(
 
 @pytest.mark.asyncio(loop_scope="session")
 async def test_outbox_process_and_project_and_request_risk_analysis(
-    db_session, create_user, create_conversation, create_message, base_url, monkeypatch
+    db_session, create_user, create_conversation, create_message, monkeypatch
 ):
     # given
     user_id = (await create_user("vini", "vini@vini.com"))["user_id"]
     conversation_id = (await create_conversation(user_id))["conversation_id"]
     await create_message(user_id, conversation_id, "hi", "vini@vini.com")
     processor = OutboxProcessor(
-        db_session, base_url, str(Path.cwd() / "prompts" / "risk_analyzer.yaml")
+        db_session, prompt_path=str(Path.cwd() / "prompts" / "risk_analyzer.yaml")
     )
     analysis = """
     {
@@ -108,7 +108,7 @@ async def test_outbox_process_and_project_and_request_risk_analysis(
 
 @pytest.mark.asyncio(loop_scope="session")
 async def test_outbox_process_and_project_and_request_risk_analysis_for_risky_message(
-    db_session, create_user, create_conversation, create_message, base_url, monkeypatch
+    db_session, create_user, create_conversation, create_message, monkeypatch
 ):
     # given
     user_id = (await create_user("anonymous", "anonymous@email.com"))["user_id"]
@@ -117,7 +117,7 @@ async def test_outbox_process_and_project_and_request_risk_analysis_for_risky_me
         user_id, conversation_id, "I want to die", "anonymous@email.com"
     )
     processor = OutboxProcessor(
-        db_session, base_url, str(Path.cwd() / "prompts" / "risk_analyzer.yaml")
+        db_session, prompt_path=str(Path.cwd() / "prompts" / "risk_analyzer.yaml")
     )
     analysis = """
     {

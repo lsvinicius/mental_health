@@ -14,7 +14,7 @@ from testcontainers.postgres import PostgresContainer
 
 @pytest_asyncio.fixture(scope="session")
 async def postgres_url():
-    with PostgresContainer("postgres:16-alpine") as postgres:
+    with PostgresContainer("postgres:18.1") as postgres:
         host = postgres.get_container_host_ip()
         port = postgres.get_exposed_port(5432)
         url = f"postgresql+asyncpg://{postgres.username}:{postgres.password}@{host}:{port}/{postgres.dbname}"

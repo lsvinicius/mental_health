@@ -6,11 +6,11 @@ import uvicorn
 from fastapi import FastAPI
 from starlette.responses import RedirectResponse
 
-from settings import settings
 from src.api.conversation import router as conversation_router
 from src.api.dependencies import async_session
 from src.api.user import router as user_router
 from src.outbox_processor import OutboxProcessor
+from src.settings import settings
 
 logging.basicConfig(
     level=logging.INFO,
